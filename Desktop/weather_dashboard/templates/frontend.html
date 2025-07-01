@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Weather Dashboard - Home</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(to bottom, #f0f4f8, #d9e2ec);
+      color: #333;
+    }
+
+    nav {
+      background-color: #333;
+      padding: 15px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    nav a {
+      color: white;
+      text-decoration: none;
+      margin: 0 15px;
+      font-weight: bold;
+    }
+
+    nav a:hover {
+      text-decoration: underline;
+    }
+
+    main {
+      padding: 40px 20px;
+      max-width: 900px;
+      margin: auto;
+      text-align: center;
+    }
+
+    h1, h2, h3 {
+      color: #2c3e50;
+    }
+
+    p {
+      font-size: 1.1rem;
+    }
+
+    ul {
+      list-style-type: none;
+      padding-left: 0;
+      text-align: left;
+      max-width: 600px;
+      margin: 20px auto;
+    }
+
+    ul li::before {
+      content: "✅ ";
+    }
+
+    .button {
+      background-color: #007BFF;
+      padding: 12px 24px;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      text-decoration: none;
+      font-size: 1rem;
+      display: inline-block;
+      margin-top: 20px;
+    }
+
+    .button:hover {
+      background-color: #0056b3;
+    }
+
+    footer {
+      margin-top: 60px;
+      text-align: center;
+      color: #777;
+      padding: 20px;
+    }
+
+    img.hero {
+      width: 100%;
+      max-width: 800px;
+      border-radius: 10px;
+      margin-top: 30px;
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <div><a href="/">🏠 Home</a></div>
+    <div id="nav-links">
+      <a href="/api/users/register-page/">Register</a>
+      <a href="/api/users/login-page/">Login</a>
+    </div>
+  </nav>
+
+  <main>
+    <h1>🌦️ Your Personalized Weather Dashboard</h1>
+    <p>Get instant weather updates based on your saved or current location.</p>
+    <img src="https://source.unsplash.com/800x300/?weather,sky" alt="Weather Image" class="hero">
+
+    <div style="margin-top: 40px;">
+      <h3>🌐 Features</h3>
+      <ul>
+        <li>🔍 View real-time weather updates</li>
+        <li>📍 Save your preferred location</li>
+        <li>📡 Auto-detect location via browser</li>
+        <li>🔐 Secure JWT-based login system</li>
+      </ul>
+    </div>
+
+    <div id="cta"></div>
+  </main>
+
+  <footer>
+    <hr>
+    <p>&copy; 2025 Weather Dashboard | Built by Neeraj</p>
+  </footer>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const token = localStorage.getItem("token");
+      const navLinks = document.getElementById("nav-links");
+      const cta = document.getElementById("cta");
+
+      if (token) {
+        navLinks.innerHTML = `
+          <a href="/api/users/dashboard/">Dashboard</a>
+          <a href="#" id="logoutLink">Logout</a>
+        `;
+        cta.innerHTML = `<a class="button" href="/api/users/dashboard/">Go to Dashboard</a>`;
+        document.getElementById("logoutLink").onclick = function (e) {
+          e.preventDefault();
+          localStorage.removeItem("token");
+          window.location.href = "/";
+        };
+      } else {
+        cta.innerHTML = `<a class="button" href="/api/users/register-page/">Get Started</a>`;
+      }
+    });
+  </script>
+
+</body>
+</html>

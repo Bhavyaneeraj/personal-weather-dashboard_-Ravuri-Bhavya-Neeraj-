@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Register - Weather Dashboard</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+            background-color: #f2f6fa;
+            margin: 0;
+        }
+        nav {
+            background-color: #34495e;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        nav a {
+            color: white;
+            text-decoration: none;
+            margin: 0 15px;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+        nav a:hover {
+            text-decoration: underline;
+        }
+        form {
+            background: white;
+            padding: 30px 25px;
+            max-width: 400px;
+            margin: 40px auto;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            border-radius: 12px;
+            box-sizing: border-box;
+        }
+        input, button {
+            width: 100%;
+            padding: 12px 15px;
+            margin: 12px 0;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 1rem;
+            box-sizing: border-box;
+            transition: border-color 0.3s ease;
+        }
+        input:focus {
+            border-color: #2980b9;
+            outline: none;
+        }
+        button {
+            background-color: #2980b9;
+            color: white;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #1c5980;
+        }
+        #error {
+            color: #e74c3c;
+            text-align: center;
+            font-weight: 600;
+            margin-top: -8px;
+            margin-bottom: 10px;
+        }
+        p {
+            text-align: center;
+            font-size: 1rem;
+            margin-top: 20px;
+            color: #555;
+        }
+        p a {
+            color: #2980b9;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        p a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+<nav>
+    <div><a href="/">🏠 Home</a></div>
+    <div id="nav-links">
+        <a href="/api/users/register-page/">Register</a>
+        <a href="/api/users/login-page/">Login</a>
+    </div>
+</nav>
+
+<h2 style="text-align:center; margin-top: 40px;">Create Your Account</h2>
+<div id="error"></div>
+
+<form id="registerForm" novalidate>
+    <input type="email" name="email" placeholder="Email" required autocomplete="email"><br>
+    <input type="text" name="username" placeholder="Username" required autocomplete="username"><br>
+    <input type="password" name="password" placeholder="Password" required autocomplete="new-password"><br>
+    <button type="submit">Register</button>
+</form>
+
+<p>Already have an account? <a href="/api/users/login-page/">Login</a></p>
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const token = localStorage.getItem("token");
+        if (token) {
+            const navLinks = document.getElementById("nav-links");
+            if (navLinks) {
+                navLinks.innerHTML = `
+                    <a href="/api/users/dashboard/">Dashboard</a>
+                    <a href="#" id="logoutLink">Logout</a>
+                `;
+                document.getElementById("logoutLink").onclick = function (e) {
+                    e.preventDefault();
+                    localStorage.removeItem("token");
+                    window.location.href = "/";
+                };
+            }
+        }
+    });
+
+    document.getElementById("registerForm").onsubmit = async function(e) {
+        e.preventDefault();
+        document.getElementById("error").textContent = ""; 
+        const email = e.target.email.value.trim();
+        const username = e.target.username.value.trim();
+        const password = e.target.password.value;
+
+        const res = await fetch("/api/users/register/", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, username, password })
+        });
+
+        const result = await res.json();
+
+        if (res.ok) {
+            alert("Registration successful! Please log in.");
+            window.location.href = "/api/users/login-page/";
+        } else {
+            if (typeof result === 'object') {
+                let errorMessages = [];
+                for (const key in result) {
+                    if (Array.isArray(result[key])) {
+                        errorMessages.push(`${key}: ${result[key].join(', ')}`);
+                    } else {
+                        errorMessages.push(`${key}: ${result[key]}`);
+                    }
+                }
+                document.getElementById("error").textContent = errorMessages.join(' | ');
+            } else {
+                document.getElementById("error").textContent = "Registration failed. Please try again.";
+            }
+        }
+    };
+</script>
+
+</body>
+</html>

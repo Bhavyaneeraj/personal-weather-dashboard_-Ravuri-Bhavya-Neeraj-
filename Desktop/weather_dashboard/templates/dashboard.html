@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dashboard - Weather App</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f0f2f5;
+      margin: 0;
+      padding: 0;
+      color: #333;
+    }
+
+    nav {
+      background-color: #34495e;
+      color: white;
+      padding: 15px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    nav a {
+      color: white;
+      text-decoration: none;
+      margin-left: 20px;
+      font-weight: 600;
+      font-size: 1rem;
+      transition: color 0.3s ease;
+    }
+
+    nav a:hover {
+      color: #1abc9c;
+      text-decoration: underline;
+    }
+
+    .container {
+      max-width: 500px;
+      margin: 40px auto;
+      background-color: #fff;
+      padding: 30px 25px;
+      border-radius: 12px;
+      box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+      box-sizing: border-box;
+    }
+
+    h2, h3 {
+      text-align: center;
+      margin-bottom: 20px;
+      font-weight: 700;
+      color: #2c3e50;
+    }
+
+    #weather p {
+      font-size: 17px;
+      line-height: 1.7;
+      margin: 10px 0;
+      user-select: none;
+    }
+
+    input, button {
+      width: 100%;
+      padding: 12px 15px;
+      margin-top: 14px;
+      box-sizing: border-box;
+      border: 1.8px solid #ccc;
+      border-radius: 8px;
+      font-size: 1rem;
+      transition: border-color 0.3s ease;
+    }
+
+    input:focus {
+      border-color: #1abc9c;
+      outline: none;
+    }
+
+    button {
+      background-color: #34495e;
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #1abc9c;
+    }
+
+    #message {
+      margin-top: 15px;
+      font-weight: 600;
+      text-align: center;
+      user-select: none;
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div><strong>🌦️ Weather Dashboard</strong></div>
+  <div>
+    <a href="/">Home</a>
+    <a href="#" id="logoutLink">Logout</a>
+  </div>
+</nav>
+
+<div class="container">
+  <h2>Current Weather</h2>
+  <div id="weather">Loading...</div>
+
+  <h3>Update Location</h3>
+  <form id="locationForm" autocomplete="off">
+    <input type="text" name="location_city" placeholder="City" />
+    <input type="text" name="location_country" placeholder="Country" />
+    <input type="number" step="any" name="latitude" placeholder="Latitude (Optional)" />
+    <input type="number" step="any" name="longitude" placeholder="Longitude (Optional)" />
+    <button type="submit">Update Location</button>
+  </form>
+
+  <div id="message"></div>
+</div>
+
+<script>
+  const token = localStorage.getItem("token");
+
+  if (!token) {
+    window.location.href = "/api/users/login-page/";
+  }
+
+  async function fetchWeather() {
+    try {
+      const res = await fetch("/api/weather/", {
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        document.getElementById("weather").innerHTML = `
+          <p>🌡️ Temperature: ${data.temperature} °C</p>
+          <p>💧 Humidity: ${data.humidity}%</p>
+          <p>☁️ Condition: ${data.condition}</p>
+          <p>🌬️ Wind Speed: ${data.wind_speed} m/s</p>
+        `;
+      } else {
+        document.getElementById("weather").innerText = "❌ Could not fetch weather. Please provide location below.";
+      }
+    } catch (error) {
+      document.getElementById("weather").innerText = "❌ Error fetching weather data.";
+      console.error("Fetch error:", error);
+    }
+  }
+
+  fetchWeather();
+
+  document.getElementById("locationForm").onsubmit = async function(e) {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const payload = {};
+
+    formData.forEach((value, key) => {
+      if (value.trim()) payload[key] = value.trim();
+    });
+
+    const messageDiv = document.getElementById("message");
+    messageDiv.textContent = "";
+
+    try {
+      const res = await fetch("/api/users/update-location/", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (res.ok) {
+        messageDiv.style.color = "green";
+        messageDiv.textContent = "✅ Location updated successfully!";
+        e.target.reset();
+        fetchWeather();
+      } else {
+        const errorData = await res.json();
+        messageDiv.style.color = "red";
+        messageDiv.textContent = errorData.error || "❌ Failed to update location.";
+      }
+    } catch (error) {
+      messageDiv.style.color = "red";
+      messageDiv.textContent = "❌ Network error while updating location.";
+      console.error("Update location error:", error);
+    }
+  };
+
+  document.getElementById("logoutLink").onclick = function(e) {
+    e.preventDefault();
+    localStorage.removeItem("token");
+    window.location.href = "/api/users/login-page/";
+  };
+</script>
+
+</body>
+</html>

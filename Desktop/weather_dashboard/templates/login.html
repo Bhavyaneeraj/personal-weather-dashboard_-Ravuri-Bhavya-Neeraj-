@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Login - Weather Dashboard</title>
+    <style>
+        body {
+            font-family: Arial;
+            background-color: #f2f2f2;
+            padding: 20px;
+        }
+        nav {
+            background-color: #333;
+            padding: 10px;
+            display: flex;
+            justify-content: space-between;
+        }
+        nav a {
+            color: white;
+            text-decoration: none;
+            margin: 0 10px;
+            font-weight: bold;
+        }
+        nav a:hover {
+            text-decoration: underline;
+        }
+        form {
+            background-color: white;
+            padding: 20px;
+            max-width: 400px;
+            margin: 40px auto;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            border-radius: 10px;
+        }
+        input, button {
+            width: 100%;
+            padding: 10px;
+            margin: 8px 0;
+            box-sizing: border-box;
+        }
+        #error {
+            color: red;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+<nav>
+    <div><a href="/">🏠 Home</a></div>
+    <div id="nav-links">
+        <a href="/api/users/register-page/">Register</a>
+        <a href="/api/users/login-page/">Login</a>
+    </div>
+</nav>
+
+<h2 style="text-align:center;">Login to Your Dashboard</h2>
+<div id="error"></div>
+
+<form id="loginForm">
+    <input type="email" name="email" placeholder="Email" required><br>
+    <input type="password" name="password" placeholder="Password" required><br>
+    <button type="submit">Login</button>
+</form>
+
+<p style="text-align:center;">Don't have an account? <a href="/api/users/register-page/">Register</a></p>
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const token = localStorage.getItem("token");
+        if (token) {
+            document.getElementById("nav-links").innerHTML = `
+                <a href="/api/users/dashboard/">Dashboard</a>
+                <a href="#" onclick="logout()">Logout</a>
+            `;
+        }
+    });
+
+    function logout() {
+        localStorage.removeItem("token");
+        window.location.href = "/";
+    }
+
+    document.getElementById("loginForm").onsubmit = async function(e) {
+        e.preventDefault();
+        const email = e.target.email.value;
+        const password = e.target.password.value;
+        const errorDiv = document.getElementById("error");
+
+        const res = await fetch("/api/users/token/", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, password })
+        });
+
+        const data = await res.json();
+
+        if (res.ok && data.access) {
+            localStorage.setItem("token", data.access);
+            window.location.href = "/api/users/dashboard/";
+        } else {
+            errorDiv.textContent = data?.detail || "Login failed. Check your credentials.";
+        }
+    };
+</script>
+
+</body>
+</html>
