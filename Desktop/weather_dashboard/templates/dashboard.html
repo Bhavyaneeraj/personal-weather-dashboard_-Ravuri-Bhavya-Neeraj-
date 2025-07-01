@@ -1,100 +1,76 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Dashboard - Weather App</title>
   <style>
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-family: Arial, sans-serif;
       background: #f0f2f5;
       margin: 0;
       padding: 0;
-      color: #333;
     }
 
     nav {
-      background-color: #34495e;
+      background-color: #333;
       color: white;
-      padding: 15px 30px;
+      padding: 15px;
       display: flex;
       justify-content: space-between;
-      align-items: center;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     }
 
     nav a {
       color: white;
       text-decoration: none;
       margin-left: 20px;
-      font-weight: 600;
-      font-size: 1rem;
-      transition: color 0.3s ease;
     }
 
     nav a:hover {
-      color: #1abc9c;
       text-decoration: underline;
     }
 
     .container {
-      max-width: 500px;
-      margin: 40px auto;
+      max-width: 600px;
+      margin: 30px auto;
       background-color: #fff;
-      padding: 30px 25px;
-      border-radius: 12px;
-      box-shadow: 0 6px 15px rgba(0,0,0,0.1);
-      box-sizing: border-box;
+      padding: 25px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
     }
 
     h2, h3 {
       text-align: center;
-      margin-bottom: 20px;
-      font-weight: 700;
-      color: #2c3e50;
     }
 
     #weather p {
-      font-size: 17px;
-      line-height: 1.7;
-      margin: 10px 0;
-      user-select: none;
+      font-size: 16px;
+      line-height: 1.6;
     }
 
     input, button {
       width: 100%;
-      padding: 12px 15px;
-      margin-top: 14px;
+      padding: 10px;
+      margin-top: 10px;
       box-sizing: border-box;
-      border: 1.8px solid #ccc;
-      border-radius: 8px;
-      font-size: 1rem;
-      transition: border-color 0.3s ease;
-    }
-
-    input:focus {
-      border-color: #1abc9c;
-      outline: none;
+      border: 1px solid #ccc;
+      border-radius: 5px;
     }
 
     button {
-      background-color: #34495e;
+      background-color: #333;
       color: white;
       border: none;
       cursor: pointer;
-      font-weight: 600;
-      transition: background-color 0.3s ease;
+      transition: background-color 0.2s;
     }
 
     button:hover {
-      background-color: #1abc9c;
+      background-color: #555;
     }
 
     #message {
-      margin-top: 15px;
-      font-weight: 600;
+      color: green;
       text-align: center;
-      user-select: none;
+      margin-top: 10px;
     }
   </style>
 </head>
@@ -104,7 +80,7 @@
   <div><strong>🌦️ Weather Dashboard</strong></div>
   <div>
     <a href="/">Home</a>
-    <a href="#" id="logoutLink">Logout</a>
+    <a href="#" onclick="logout()">Logout</a>
   </div>
 </nav>
 
@@ -113,11 +89,11 @@
   <div id="weather">Loading...</div>
 
   <h3>Update Location</h3>
-  <form id="locationForm" autocomplete="off">
-    <input type="text" name="location_city" placeholder="City" />
-    <input type="text" name="location_country" placeholder="Country" />
-    <input type="number" step="any" name="latitude" placeholder="Latitude (Optional)" />
-    <input type="number" step="any" name="longitude" placeholder="Longitude (Optional)" />
+  <form id="locationForm">
+    <input type="text" name="location_city" placeholder="City">
+    <input type="text" name="location_country" placeholder="Country">
+    <input type="number" step="any" name="latitude" placeholder="Latitude(OPTIONAL)">
+    <input type="number" step="any" name="longitude" placeholder="Longitude(OPTIONAl)">
     <button type="submit">Update Location</button>
   </form>
 
@@ -132,25 +108,20 @@
   }
 
   async function fetchWeather() {
-    try {
-      const res = await fetch("/api/weather/", {
-        headers: { "Authorization": `Bearer ${token}` }
-      });
+    const res = await fetch("/api/weather/", {
+      headers: { "Authorization": `Bearer ${token}` }
+    });
 
-      if (res.ok) {
-        const data = await res.json();
-        document.getElementById("weather").innerHTML = `
-          <p>🌡️ Temperature: ${data.temperature} °C</p>
-          <p>💧 Humidity: ${data.humidity}%</p>
-          <p>☁️ Condition: ${data.condition}</p>
-          <p>🌬️ Wind Speed: ${data.wind_speed} m/s</p>
-        `;
-      } else {
-        document.getElementById("weather").innerText = "❌ Could not fetch weather. Please provide location below.";
-      }
-    } catch (error) {
-      document.getElementById("weather").innerText = "❌ Error fetching weather data.";
-      console.error("Fetch error:", error);
+    if (res.ok) {
+      const data = await res.json();
+      document.getElementById("weather").innerHTML = `
+        <p>🌡️ Temperature: ${data.temperature} °C</p>
+        <p>💧 Humidity: ${data.humidity}%</p>
+        <p>☁️ Condition: ${data.condition}</p>
+        <p>🌬️ Wind Speed: ${data.wind_speed} m/s</p>
+      `;
+    } else {
+      document.getElementById("weather").innerText = "❌ Could not fetch weather.Please Give the location from the below Form.";
     }
   }
 
@@ -162,43 +133,65 @@
     const payload = {};
 
     formData.forEach((value, key) => {
-      if (value.trim()) payload[key] = value.trim();
+      if (value) payload[key] = value;
+    });
+
+    const res = await fetch("/api/users/update-location/", {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      },
+      body: JSON.stringify(payload)
     });
 
     const messageDiv = document.getElementById("message");
-    messageDiv.textContent = "";
 
-    try {
-      const res = await fetch("/api/users/update-location/", {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        },
-        body: JSON.stringify(payload)
-      });
-
-      if (res.ok) {
-        messageDiv.style.color = "green";
-        messageDiv.textContent = "✅ Location updated successfully!";
-        e.target.reset();
-        fetchWeather();
-      } else {
-        const errorData = await res.json();
-        messageDiv.style.color = "red";
-        messageDiv.textContent = errorData.error || "❌ Failed to update location.";
-      }
-    } catch (error) {
+    if (res.ok) {
+      messageDiv.style.color = "green";
+      messageDiv.textContent = "✅ Location updated!";
+      e.target.reset();
+      fetchWeather();
+    } else {
       messageDiv.style.color = "red";
-      messageDiv.textContent = "❌ Network error while updating location.";
-      console.error("Update location error:", error);
+      messageDiv.textContent = "❌ Failed to update location.";
     }
   };
 
-  document.getElementById("logoutLink").onclick = function(e) {
-    e.preventDefault();
+  function logout() {
     localStorage.removeItem("token");
     window.location.href = "/api/users/login-page/";
+  }
+  window.onload = function() {
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(async function(position) {
+        const lat = position.coords.latitude;
+        const lon = position.coords.longitude;
+
+        const token = localStorage.getItem("token");
+
+        const res = await fetch("/api/users/update-location/", {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            latitude: lat,
+            longitude: lon
+          })
+        });
+
+        if (res.ok) {
+          console.log("Auto location updated");
+          fetchWeather(); 
+        }
+      }, function(error) {
+        console.warn("Geolocation permission denied or unavailable.");
+      });
+    } else {
+      console.warn("Geolocation is not supported by this browser.");
+    }
   };
 </script>
 
